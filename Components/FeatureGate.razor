@@ -1,0 +1,27 @@
+@inject DocKit.Services.FeatureFlagService Flags
+@implements IDisposable
+
+@if (Flags.IsEnabled(Flag))
+{
+    @ChildContent
+}
+else if (Disabled is not null)
+{
+    @Disabled
+}
+
+@code {
+    [Parameter] public string Flag { get; set; } = "";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? Disabled { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Flags.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        Flags.OnChange -= StateHasChanged;
+    }
+}

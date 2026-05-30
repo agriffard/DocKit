@@ -1,0 +1,58 @@
+@page "/docs"
+@page "/docs/{*Slug}"
+
+@inject DocKit.Services.DocsManifestService ManifestService
+@inject NavigationManager Nav
+
+<PageTitle>@pageTitle — DocKit</PageTitle>
+
+<div class="docs-layout">
+    <article class="docs-content">
+        @if (!string.IsNullOrEmpty(currentSlug))
+        {
+            <DocKit.Components.MarkdownView Slug="@currentSlug" OnHeadingsChanged="UpdateHeadings" />
+        }
+    </article>
+    <aside class="docs-toc">
+        <DocKit.Components.TableOfContents Html="@tocHtml" />
+    </aside>
+</div>
+
+@code {
+    [Parameter] public string? Slug { get; set; }
+
+    private string currentSlug = "";
+    private string tocHtml = "";
+    private string pageTitle = "Docs";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrEmpty(Slug))
+        {
+            var entries = await ManifestService.GetManifestAsync();
+            var first = entries
+                .OrderBy(e => string.IsNullOrEmpty(e.Group) ? 0 : 1)
+                .ThenBy(e => e.Order)
+                .ThenBy(e => e.Slug)
+                .FirstOrDefault();
+
+            if (first is not null)
+            {
+                currentSlug = first.Slug;
+                pageTitle = first.Title;
+            }
+        }
+        else
+        {
+            currentSlug = Slug;
+            var entries = await ManifestService.GetManifestAsync();
+            var entry = entries.FirstOrDefault(e => e.Slug == Slug);
+            pageTitle = entry?.Title ?? Slug;
+        }
+    }
+
+    private void UpdateHeadings(string html)
+    {
+        tocHtml = html;
+    }
+}

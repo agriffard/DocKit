@@ -1,0 +1,81 @@
+<Project>
+
+  <UsingTask
+    TaskName="GenerateDocsManifest"
+    TaskFactory="RoslynCodeTaskFactory"
+    AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <DocsRoot ParameterType="System.String" Required="true" />
+      <OutputFile ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Text" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        var entries = new System.Collections.Generic.List<string>();
+
+        if (Directory.Exists(DocsRoot))
+        {
+            foreach (var file in Directory.GetFiles(DocsRoot, "*.md", SearchOption.AllDirectories))
+            {
+                var relativePath = file.Substring(DocsRoot.Length).TrimStart(Path.DirectorySeparatorChar, '/');
+                var slug = relativePath.Replace(Path.DirectorySeparatorChar, '/').Replace(".md", "");
+
+                string title = slug;
+                string group = "";
+                int order = 0;
+                string description = "";
+
+                var lines = File.ReadAllLines(file);
+                if (lines.Length > 0 && lines[0].Trim() == "---")
+                {
+                    int end = -1;
+                    for (int i = 1; i < lines.Length; i++)
+                    {
+                        if (lines[i].Trim() == "---") { end = i; break; }
+                    }
+                    if (end > 0)
+                    {
+                        for (int i = 1; i < end; i++)
+                        {
+                            var line = lines[i];
+                            var colonIdx = line.IndexOf(':');
+                            if (colonIdx < 0) continue;
+                            var key = line.Substring(0, colonIdx).Trim();
+                            var value = line.Substring(colonIdx + 1).Trim().Trim('"');
+                            if (key == "title") title = value;
+                            else if (key == "group") group = value;
+                            else if (key == "order") int.TryParse(value, out order);
+                            else if (key == "description") description = value;
+                        }
+                    }
+                }
+
+                // Build JSON object manually (safe for simple string values)
+                var entry = "  {\n" +
+                    "    \"slug\": \""        + slug.Replace("\"", "\\\"")        + "\",\n" +
+                    "    \"title\": \""       + title.Replace("\"", "\\\"")       + "\",\n" +
+                    "    \"group\": \""       + group.Replace("\"", "\\\"")       + "\",\n" +
+                    "    \"order\": "         + order                              + ",\n" +
+                    "    \"description\": \"" + description.Replace("\"", "\\\"") + "\"\n" +
+                    "  }";
+                entries.Add(entry);
+            }
+        }
+
+        var json = "[\n" + string.Join(",\n", entries) + "\n]";
+        var outputDir = Path.GetDirectoryName(OutputFile);
+        if (!string.IsNullOrEmpty(outputDir))
+            Directory.CreateDirectory(outputDir);
+        File.WriteAllText(OutputFile, json);
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="GenerateDocsManifestTarget" BeforeTargets="Build">
+    <GenerateDocsManifest
+      DocsRoot="$(MSBuildProjectDirectory)/wwwroot/docs"
+      OutputFile="$(MSBuildProjectDirectory)/wwwroot/docs/manifest.json" />
+  </Target>
+
+</Project>

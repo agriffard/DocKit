@@ -1,0 +1,101 @@
+@page "/demo"
+@inject DocKit.Services.FeatureFlagService Flags
+
+<PageTitle>Demo — DocKit</PageTitle>
+
+<h1>FeatureGate Demo</h1>
+<p>
+    The <code>FeatureGate</code> component conditionally renders content based on a named flag.
+    Toggle the flag below to see it in action.
+</p>
+
+<div class="demo-section">
+    <div class="demo-controls">
+        <strong>Flag: <code>my-feature</code></strong>
+        <button class="btn @(Flags.IsEnabled("my-feature") ? "btn-primary" : "btn-secondary")"
+                @onclick="ToggleFlag">
+            @(Flags.IsEnabled("my-feature") ? "✅ Enabled — Click to disable" : "❌ Disabled — Click to enable")
+        </button>
+    </div>
+
+    <div class="demo-preview">
+        <DocKit.Components.FeatureGate Flag="my-feature">
+            <ChildContent>
+                <div class="feature-enabled-box">
+                    🎉 <strong>Feature is enabled!</strong> This content is only visible when the flag is on.
+                </div>
+            </ChildContent>
+            <Disabled>
+                <div class="feature-disabled-box">
+                    🚫 Feature is currently <strong>disabled</strong>. Toggle it above to reveal the content.
+                </div>
+            </Disabled>
+        </DocKit.Components.FeatureGate>
+    </div>
+</div>
+
+<div class="demo-code">
+    <h2>Usage</h2>
+    <pre><code class="language-razor">@demoSnippet</code></pre>
+
+    <h2>FeatureGate Component</h2>
+    <pre><code class="language-razor">@componentSnippet</code></pre>
+
+    <h2>FeatureFlagService</h2>
+    <pre><code class="language-csharp">@serviceSnippet</code></pre>
+</div>
+
+@code {
+    private void ToggleFlag() => Flags.Toggle("my-feature");
+
+    private const string demoSnippet =
+@"<FeatureGate Flag=""my-feature"">
+    <ChildContent>
+        <!-- Shown when flag is enabled -->
+        <p>Feature content here.</p>
+    </ChildContent>
+    <Disabled>
+        <!-- Optional: shown when flag is disabled -->
+        <p>Feature coming soon!</p>
+    </Disabled>
+</FeatureGate>";
+
+    private const string componentSnippet =
+@"@* Components/FeatureGate.razor *@
+@inject FeatureFlagService Flags
+
+@if (Flags.IsEnabled(Flag))
+{
+    @ChildContent
+}
+else if (Disabled is not null)
+{
+    @Disabled
+}
+
+@code {
+    [Parameter] public string Flag { get; set; } = """";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? Disabled { get; set; }
+}";
+
+    private const string serviceSnippet =
+@"// Services/FeatureFlagService.cs
+public class FeatureFlagService
+{
+    private readonly Dictionary<string, bool> _flags = new();
+    public event Action? OnChange;
+
+    public bool IsEnabled(string flag) =>
+        _flags.TryGetValue(flag, out var v) && v;
+
+    public void SetFlag(string flag, bool enabled)
+    {
+        _flags[flag] = enabled;
+        OnChange?.Invoke();
+    }
+
+    public void Toggle(string flag) =>
+        SetFlag(flag, !IsEnabled(flag));
+}";
+}
