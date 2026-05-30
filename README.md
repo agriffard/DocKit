@@ -1,12 +1,14 @@
 # DocKit
 
-A lightweight documentation-site template built with **Blazor WebAssembly** (.NET 10). Write your docs as Markdown files, and DocKit renders them into a fast, themeable, fully client-side static site — ready to deploy to GitHub Pages.
+👉 **GitHub Pages:** https://agriffard.github.io/DocKit/
+
+A lightweight documentation-site template built with **Blazor WebAssembly** (.NET 10). Write your docs as Markdown files, and DocKit renders them into a fast, themeable, fully client-side static site.
 
 ## Features
 
 - **Markdown-driven** — drop `.md` files in `wwwroot/docs/`; navigation and routes are generated automatically.
 - **Build-time manifest** — an MSBuild task scans the docs folder and emits `manifest.json` (titles, groups, ordering) from YAML front-matter. No manual index to maintain.
-- **Markdown rendering** — [Markdig](https://github.com/xoofx/markdig) with advanced extensions, YAML front-matter, and auto heading IDs. External links get `target="_blank" rel="noopener noreferrer"`; relative `.md` links are rewritten to in-app routes.
+- **Markdown rendering** — [Markdig](https://github.com/xoofx/markdig) with advanced extensions, YAML front-matter, and auto heading IDs. External links get `target="_blank" rel="noopener noreferrer"`.
 - **Responsive nav** — sidebar on desktop, slide-in drawer with hamburger trigger on mobile.
 - **Light/dark theme** — toggle persisted to `localStorage`; respects `prefers-color-scheme` by default.
 - **Feature flags** — `FeatureFlagService` + `<FeatureGate>` component to show/hide content at runtime, with a live demo page.
