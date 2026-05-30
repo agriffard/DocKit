@@ -1,3 +1,5 @@
+@inject IJSRuntime JS
+
 @if (headings.Count > 0)
 {
     <nav class="toc" aria-label="Table of contents">
@@ -6,7 +8,7 @@
             @foreach (var heading in headings)
             {
                 <li class="toc-@heading.Level">
-                    <a href="#@heading.Id">@heading.Text</a>
+                    <a href="#@heading.Id" @onclick="() => ScrollTo(heading.Id)" @onclick:preventDefault="true">@heading.Text</a>
                 </li>
             }
         </ul>
@@ -15,6 +17,11 @@
 
 @code {
     [Parameter] public string Html { get; set; } = "";
+
+    private async Task ScrollTo(string id)
+    {
+        await JS.InvokeVoidAsync("scrollToHeading", id);
+    }
 
     private List<HeadingItem> headings = new();
 
