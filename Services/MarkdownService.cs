@@ -91,9 +91,9 @@ public class MarkdownService
         if (url.EndsWith(".md"))
             url = url[..^3];
 
-        // Prefix with /docs/ if not already absolute
+        // Prefix with docs/ (relative, resolves against <base href>) if not already absolute
         if (!url.StartsWith("/"))
-            url = "/docs/" + url;
+            url = "docs/" + url;
 
         return url + fragment;
     }

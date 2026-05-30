@@ -10,9 +10,9 @@
     </div>
 
     <ul class="nav-links">
-        <li><NavLink href="/" Match="NavLinkMatch.All">🏠 Home</NavLink></li>
-        <li><NavLink href="/docs">📄 Docs</NavLink></li>
-        <li><NavLink href="/demo">🎛 Demo</NavLink></li>
+        <li><NavLink href="" Match="NavLinkMatch.All">🏠 Home</NavLink></li>
+        <li><NavLink href="docs">📄 Docs</NavLink></li>
+        <li><NavLink href="demo">🎛 Demo</NavLink></li>
         <li>
             <a href="https://github.com" target="_blank" rel="noopener noreferrer">
                 ⭐ GitHub
@@ -33,7 +33,7 @@
                     @foreach (var entry in group.Value)
                     {
                         <li>
-                            <NavLink href="@($"/docs/{entry.Slug}")">
+                            <NavLink href="@($"docs/{entry.Slug}")">
                                 @entry.Title
                             </NavLink>
                         </li>
