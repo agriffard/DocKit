@@ -1,0 +1,76 @@
+@inject HttpClient Http
+@inject DocKit.Services.MarkdownService MarkdownSvc
+@inject IJSRuntime JS
+@implements IDisposable
+
+@if (isLoading)
+{
+    <div class="loading">Loading docs…</div>
+}
+else if (error is not null)
+{
+    <div class="error-box">
+        <p>⚠️ Could not load <code>@Slug</code>.</p>
+        <p>@error</p>
+    </div>
+}
+else
+{
+    @((MarkupString)renderedHtml)
+}
+
+@code {
+    [Parameter] public string Slug { get; set; } = "";
+    [Parameter] public EventCallback<string> OnHeadingsChanged { get; set; }
+
+    private string renderedHtml = "";
+    private string? error;
+    private bool isLoading;
+    private string lastSlug = "";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Slug == lastSlug) return;
+        lastSlug = Slug;
+        await LoadDoc();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!isLoading && error is null && !string.IsNullOrEmpty(renderedHtml))
+        {
+            try { await JS.InvokeVoidAsync("highlightCode"); } catch { }
+        }
+    }
+
+    private async Task LoadDoc()
+    {
+        if (string.IsNullOrEmpty(Slug)) return;
+
+        isLoading = true;
+        error = null;
+        renderedHtml = "";
+        StateHasChanged();
+
+        try
+        {
+            var markdown = await Http.GetStringAsync($"docs/{Slug}.md");
+            renderedHtml = MarkdownSvc.RenderToHtml(markdown);
+            await OnHeadingsChanged.InvokeAsync(renderedHtml);
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            error = $"The document \"{Slug}\" was not found (404).";
+        }
+        catch (Exception ex)
+        {
+            error = $"An error occurred: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    public void Dispose() { }
+}

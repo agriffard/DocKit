@@ -1,0 +1,51 @@
+@if (headings.Count > 0)
+{
+    <nav class="toc" aria-label="Table of contents">
+        <div class="toc-title">On this page</div>
+        <ul>
+            @foreach (var heading in headings)
+            {
+                <li class="toc-@heading.Level">
+                    <a href="#@heading.Id">@heading.Text</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
+
+@code {
+    [Parameter] public string Html { get; set; } = "";
+
+    private List<HeadingItem> headings = new();
+
+    protected override void OnParametersSet()
+    {
+        headings = ExtractHeadings(Html);
+    }
+
+    private static List<HeadingItem> ExtractHeadings(string html)
+    {
+        var result = new List<HeadingItem>();
+        if (string.IsNullOrEmpty(html)) return result;
+
+        // Match h2 and h3 tags with id attributes
+        var pattern = @"<h([23])[^>]*\sid=""([^""]+)""[^>]*>(.*?)</h[23]>";
+        var matches = System.Text.RegularExpressions.Regex.Matches(
+            html, pattern,
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase |
+            System.Text.RegularExpressions.RegexOptions.Singleline);
+
+        foreach (System.Text.RegularExpressions.Match m in matches)
+        {
+            var level = int.Parse(m.Groups[1].Value);
+            var id = m.Groups[2].Value;
+            // Strip inner HTML tags for display text
+            var text = System.Text.RegularExpressions.Regex.Replace(m.Groups[3].Value, "<[^>]+>", "");
+            result.Add(new HeadingItem(level, id, text));
+        }
+
+        return result;
+    }
+
+    private record HeadingItem(int Level, string Id, string Text);
+}

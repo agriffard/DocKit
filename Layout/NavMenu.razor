@@ -1,0 +1,72 @@
+@inject DocKit.Services.DocsManifestService ManifestService
+@inject NavigationManager Nav
+
+<nav class="sidebar @(IsOpen ? "open" : "")">
+    <div class="nav-header">
+        <span class="nav-brand">DocKit</span>
+        <button class="hamburger" @onclick="OnToggle" aria-label="Toggle navigation">
+            <span></span><span></span><span></span>
+        </button>
+    </div>
+
+    <ul class="nav-links">
+        <li><NavLink href="/" Match="NavLinkMatch.All">🏠 Home</NavLink></li>
+        <li><NavLink href="/docs">📄 Docs</NavLink></li>
+        <li><NavLink href="/demo">🎛 Demo</NavLink></li>
+        <li>
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer">
+                ⭐ GitHub
+            </a>
+        </li>
+    </ul>
+
+    @if (groups is not null)
+    {
+        <div class="docs-nav">
+            @foreach (var group in groups)
+            {
+                @if (!string.IsNullOrEmpty(group.Key))
+                {
+                    <div class="nav-group-label">@group.Key</div>
+                }
+                <ul class="nav-group">
+                    @foreach (var entry in group.Value)
+                    {
+                        <li>
+                            <NavLink href="@($"/docs/{entry.Slug}")">
+                                @entry.Title
+                            </NavLink>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    }
+</nav>
+
+@if (IsOpen)
+{
+    <div class="nav-overlay" @onclick="OnToggle"></div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback OnToggle { get; set; }
+
+    private List<KeyValuePair<string, List<DocKit.Services.DocEntry>>>? groups;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var entries = await ManifestService.GetManifestAsync();
+
+        groups = entries
+            .GroupBy(e => e.Group ?? "")
+            .OrderBy(g => string.IsNullOrEmpty(g.Key) ? 0 : 1)
+            .ThenBy(g => g.Key)
+            .Select(g => new KeyValuePair<string, List<DocKit.Services.DocEntry>>(
+                g.Key,
+                g.OrderBy(e => e.Order).ThenBy(e => e.Slug).ToList()
+            ))
+            .ToList();
+    }
+}
