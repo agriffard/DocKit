@@ -12,7 +12,7 @@ builder.Services.AddScoped(sp => new HttpClient
     BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
 });
 
-builder.Services.AddSingleton<DocsManifestService>();
+builder.Services.AddScoped<DocsManifestService>();
 builder.Services.AddSingleton<MarkdownService>();
 builder.Services.AddSingleton<FeatureFlagService>();
 
